@@ -49,6 +49,7 @@ const Map = (props: MapProps) => {
         ModelStage.SelectingDate,
         ModelStage.Loading,
         ModelStage.MissingFeatures,
+        ModelStage.FeaturesError,
         ModelStage.ReadyForResubmit,
         ModelStage.Result,
     ].includes(props.modelStage);
@@ -113,7 +114,7 @@ const Map = (props: MapProps) => {
       
 
     const handleIconMouseDown = (e: React.MouseEvent) => {
-        if (props.modelStage === ModelStage.MissingFeatures || props.modelStage === ModelStage.ReadyForResubmit || props.modelStage === ModelStage.Result) {
+        if (props.modelStage === ModelStage.MissingFeatures || props.modelStage === ModelStage.FeaturesError || props.modelStage === ModelStage.ReadyForResubmit || props.modelStage === ModelStage.Result) {
           isDraggingIconRef.current = true;
           if (mapRef.current) {
             mapRef.current.dragging.disable();

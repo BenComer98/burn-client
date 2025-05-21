@@ -4,6 +4,7 @@ export enum ModelStage {
     SelectingDate,
     Loading,
     MissingFeatures,
+    FeaturesError,
     ReadyForResubmit,
     Result
 }

@@ -18,8 +18,9 @@ import SelectLocationPromptBox from "./components/SelectLocationPromptBox";
 import FeaturesDisplay from "./components/FeaturesDisplay";
 import IFeatureType from "./types/featureType";
 import ExitModelButton from "./components/ExitModelButton";
-import hasAllFeatures from "./components/hooks/hasAllFeatures";
-import { setDate } from "date-fns";
+import { hasAllFeatures, getMissingFeatures } from "./components/hooks/hasAllFeatures";
+import MissingFeaturesDialog from "./components/MissingFeaturesDialog";
+import MissingFeature, { InputtedFeature } from "./types/missingFeature";
 
 const testingFeatureInput: boolean = false;
 
@@ -40,6 +41,7 @@ function App() {
     const [predictionFeatures, setPredictionFeatures] = useState<IFeatureType | undefined>(undefined);
     const [showErrorFields, setShowErrorFields] = useState<boolean>(false);
     const [userOverrides, setUserOverrides] = useState<(string | null)[]>(new Array<string | null>(13).fill(null));
+    const [missingFeatures, setMissingFeatures] = useState<MissingFeature[]>([]);
 
     // Loads all non-escaped fire 12K+ records will be slow on first load/page refresh/Home button click
     useEffect(() => {
@@ -67,6 +69,18 @@ function App() {
         }
     }
 
+    const handleSubmitMissingFeatures = (features: InputtedFeature[]) => {
+        const newOverrides = [...userOverrides];
+        features.forEach((feature: InputtedFeature) => {
+            newOverrides[feature.index] = feature.value.toString();
+        });
+
+        console.log(newOverrides);
+        setUserOverrides(newOverrides);
+        setModelStage(ModelStage.Loading);
+        handleSubmitModel(undefined, newOverrides);
+    };
+
     const handleSelectLocation = (latitude: number, longitude: number) => {
         setModelLocationLatitude(latitude);
         setModelLocationLongitude(longitude);
@@ -76,7 +90,7 @@ function App() {
     const handleReselectLocation = (latitude: number, longitude: number) => {
         setModelLocationLatitude(latitude);
         setModelLocationLongitude(longitude);
-        if (modelStage !== ModelStage.MissingFeatures) {
+        if (modelStage !== ModelStage.FeaturesError) {
             setModelStage(ModelStage.ReadyForResubmit);
         }
     }
@@ -93,17 +107,21 @@ function App() {
         });
     }
 
-    const handleSubmitModel = async (date?: Date) => {
-        await getModelPrediction(modelLocationLatitude!, modelLocationLongitude!, modelDate || date!, getOverrideValues(userOverrides), testingFeatureInput).then((prediction: IPrediction) => {
+    const handleSubmitModel = async (date?: Date, overrides?: (string | null)[]) => {
+        await getModelPrediction(modelLocationLatitude!, modelLocationLongitude!, modelDate || date!, getOverrideValues(overrides || userOverrides), testingFeatureInput).then((prediction: IPrediction) => {
             console.log(prediction);
-            setPredictionFeatures(prediction.features);
-            if (!hasAllFeatures(prediction.features)) {
-                setModelStage(ModelStage.MissingFeatures);
-            }
-            else {
+            if (prediction.success && hasAllFeatures(prediction.features)) {
+                console.log("Success!");
+                setPredictionFeatures(prediction.features);
                 setPredictionAcreage(prediction.acreage);
                 setPredictionConfidence(prediction.confidence);
                 setModelStage(ModelStage.Result);
+            }
+            else {
+                console.log("Missing features");
+                console.log(getMissingFeatures(prediction.features));
+                setMissingFeatures(getMissingFeatures(prediction.features));
+                setModelStage(ModelStage.MissingFeatures);
             }
         });
     }
@@ -134,7 +152,7 @@ function App() {
                     <span className="model-container">
                         {modelStage === ModelStage.SelectingLocation && <SelectLocationPromptBox />}
                         {modelStage === ModelStage.Result && <PredictionBox confidence={predictionConfidence!} predicted_reach={predictionAcreage!} />}
-                        {(modelStage === ModelStage.MissingFeatures || modelStage === ModelStage.ReadyForResubmit || modelStage === ModelStage.Result) && <FeaturesDisplay features={predictionFeatures} featureOverrides={userOverrides} date={modelDate!} setFeatures={handleSetFeatures} setFeatureOverrides={handleSetOverrides} setDate={handleChangeDate} showErrors={showErrorFields}/>}
+                        {(modelStage === ModelStage.FeaturesError || modelStage === ModelStage.ReadyForResubmit || modelStage === ModelStage.Result) && <FeaturesDisplay features={predictionFeatures} featureOverrides={userOverrides} date={modelDate!} setFeatures={handleSetFeatures} setFeatureOverrides={handleSetOverrides} setDate={handleChangeDate} showErrors={showErrorFields}/>}
                         <div className="model-buttons">
                             {modelStage !== ModelStage.SelectingDate && <ModelButton startModel={handleStartModel} resubmitModel={handleResubmitModel} errorFields={showErrorFields} currentStage={modelStage} />}
                             {modelStage !== ModelStage.Standby && <ExitModelButton onExit={handleExitModel}/>}
@@ -145,6 +163,7 @@ function App() {
                     <Filters setFireData={setFireData} setStatistics={setStatistics} setCountyRefresh={setCountyRefresh}
                       updateBurnWindow={updateBurnWindow} resetBurnWindow={resetBurnWindow} setCounties={setCounties}/>
                     {modelStage === ModelStage.SelectingDate && <DateEntry selectDate={handleSelectDate} /> /* Keeping this one separate for its screen-spanning */}
+                    {modelStage === ModelStage.MissingFeatures && <MissingFeaturesDialog missingFeatures={missingFeatures} handleSubmit={handleSubmitMissingFeatures} handleCancel={handleExitModel}/>}
                 </Route>
                 <Route path="/about">
                     <About/>

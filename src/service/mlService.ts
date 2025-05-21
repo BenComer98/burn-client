@@ -6,12 +6,21 @@ const mlHost: string | undefined = process.env.REACT_APP_FIRE_WINDOW_BACKEND;
 export interface IPrediction {
     acreage: number;
     confidence: number;
+    success: boolean;
     features?: IFeatureType;
 }
 
-const samplePrediction: IPrediction = {
+interface ModelResponse {
+    predicted_acreage: number;
+    confidence: number;
+    features: IFeatureType;
+    success: boolean;
+}
+
+const sampleCompletePrediction: IPrediction = {
     acreage: 50,
     confidence: .50,
+    success: true,
     features: {
        elevationAvg: 40,
        elevationMin: 20,
@@ -32,6 +41,7 @@ const samplePrediction: IPrediction = {
 const partialPrediction: IPrediction = {
     acreage: -1,
     confidence: -1,
+    success: false,
     features: {
        elevationAvg: 40,
        elevationMin: 20,
@@ -46,7 +56,7 @@ const partialPrediction: IPrediction = {
 export async function getModelPrediction(latitude: number, longitude: number, date: Date, overrideFeatures: (number | null)[], testing: boolean = false): Promise<IPrediction> {
     const query = mlHost?.toString() + "/predict";
     console.log(query);
-    
+    console.log(overrideFeatures);
     return await axios.post(query!, {
                 latitude,
                 longitude,
@@ -56,24 +66,21 @@ export async function getModelPrediction(latitude: number, longitude: number, da
                 userData: overrideFeatures
             }).then((response: AxiosResponse<any>) => {
                 console.log(response);
-            const data: JSON = response.data;
+                const data: ModelResponse = response.data;
 
-            if (response.status === 200 && data && 'predicted_acreage' in data && typeof data.predicted_acreage === 'number' && 'confidence' in data && typeof data.confidence === 'number' && 'features' in data) {
-                console.log("Here!");
-                return { acreage: data.predicted_acreage, confidence: data.confidence, features: data.features! };
+                if (response.status === 200 && data && 'predicted_acreage' in data && typeof data.predicted_acreage === 'number' && 'confidence' in data && typeof data.confidence === 'number' && 'features' in data && 'success' in data && typeof data.success === 'boolean') {
+                    console.log("Here!");
+                    return { acreage: data.predicted_acreage, confidence: data.confidence, features: data.features!, success: data.success };
+                }
+                else {
+                    // Throw an error here, but for now return a static value.
+                    console.log("Uh-oh!");
+                    return testing ? partialPrediction : sampleCompletePrediction;
+                }
             }
-            else {
-                // Throw an error here, but for now return a static value.
-                console.log("Uh-oh!");
-                return testing ? partialPrediction : samplePrediction;
-            }
-        })
-        .catch((error: AxiosError) => {
+        ).catch((error: AxiosError) => {
             // We'll need to show an error here. But for now, we'll return a static value.
             console.log(error);
-            return testing ? partialPrediction : samplePrediction;
-        })
-        .finally(() => {
-            return testing ? partialPrediction : samplePrediction;
+            return testing ? partialPrediction : sampleCompletePrediction;
         });
 }

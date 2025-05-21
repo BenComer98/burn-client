@@ -36,10 +36,9 @@ const DateEntry = (props: DateEntryProps) => {
   );
 };
 
-// Explicitly typing the styles with React.CSSProperties
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
-    position: 'fixed',  // Ensures it's fixed on the screen
+    position: 'fixed',
     top: 0,
     left: 0,
     right: 0,
@@ -48,14 +47,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   formContainer: {
     backgroundColor: '#fff',
     padding: '20px',
     borderRadius: '8px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center',  // Ensure textAlign is recognized correctly
+    textAlign: 'center',
   },
   input: {
     padding: '10px',
