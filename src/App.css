@@ -15,7 +15,7 @@ main {
   flex-direction: column;
   gap: 8px; 
   padding: 12px;
-  width: 15%;
+  width: 18%;
   z-index: 1000;
 }
 
