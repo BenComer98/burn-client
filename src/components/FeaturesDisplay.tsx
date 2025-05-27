@@ -104,7 +104,7 @@ export default function FeaturesDisplay(props: FeaturesDisplayProps) {
             </div>
             {getCurrentFeatures(props.features!)?.map(([attribute, label, value, tooltip, format, unit], index) => {
                 return <p className="feature_text">
-                    <button onClick={() => handleCheck(value!, index, format)}>{props.featureOverrides[index] !== null ? "Override On" : "Override Off"}</button>
+                    <button onClick={() => handleCheck(value!, index, format)}>{props.featureOverrides[index] !== null ? "Ovrd On" : "Ovrd Off"}</button>
                     <label>{" "}</label>
                     {props.featureOverrides[index] !== null ? 
                         <>
