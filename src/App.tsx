@@ -103,11 +103,13 @@ function App() {
 
     const getOverrideValues = (overrides: (string | null)[]): (number | null)[] => {
         return overrides.map((value) => {
-            return value !== null && parseFloat(value) ? parseFloat(value) : null;
+            const parsed = value !== null ? parseFloat(value) : NaN;
+            return !isNaN(parsed) ? parsed : null;
         });
     }
 
     const handleSubmitModel = async (date?: Date, overrides?: (string | null)[]) => {
+        console.log(overrides);
         await getModelPrediction(modelLocationLatitude!, modelLocationLongitude!, modelDate || date!, getOverrideValues(overrides || userOverrides), testingFeatureInput).then((prediction: IPrediction) => {
             console.log(prediction);
             if (prediction.success && hasAllFeatures(prediction.features)) {
