@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import IFeatureType from "../types/featureType";
+import { LatLng } from "leaflet";
 
 const mlHost: string | undefined = process.env.REACT_APP_FIRE_WINDOW_BACKEND;
 
@@ -53,13 +54,13 @@ const partialPrediction: IPrediction = {
     }
 }
 
-export async function getModelPrediction(latitude: number, longitude: number, date: Date, overrideFeatures: (number | null)[], testing: boolean = false): Promise<IPrediction> {
+export async function getModelPrediction(latlng: LatLng, date: Date, overrideFeatures: (number | null)[], testing: boolean = false): Promise<IPrediction> {
     const query = mlHost?.toString() + "/predict";
     console.log(query);
     console.log(overrideFeatures);
     return await axios.post(query!, {
-                latitude,
-                longitude,
+                latitude: latlng.lat,
+                longitude: latlng.lng,
                 year: date.getFullYear().toString(),
                 month: date.getMonth().toString(),
                 day: date.getDate().toString(),

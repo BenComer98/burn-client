@@ -21,6 +21,7 @@ import ExitModelButton from "./components/ExitModelButton";
 import { hasAllFeatures, getMissingFeatures } from "./components/hooks/hasAllFeatures";
 import MissingFeaturesDialog from "./components/MissingFeaturesDialog";
 import MissingFeature, { InputtedFeature } from "./types/missingFeature";
+import { LatLng } from "leaflet";
 
 const testingFeatureInput: boolean = false;
 
@@ -33,8 +34,7 @@ function App() {
     const [counties, setCounties] = useState<string[]>([]);
     const [countyRefresh, setCountyRefresh] = useState(1);
     const [modelStage, setModelStage] = useState(ModelStage.Standby);
-    const [modelLocationLatitude, setModelLocationLatitude] = useState<number | null>(null);
-    const [modelLocationLongitude, setModelLocationLongitude] = useState<number | null>(null);
+    const [modelLatLng, setModelLatLng] = useState<LatLng | null>(null);
     const [modelDate, setModelDate] = useState<Date | null>(null);
     const [predictionAcreage, setPredictionAcreage] = useState<number | null>(null);
     const [predictionConfidence, setPredictionConfidence] = useState<number | null>(null);
@@ -82,14 +82,12 @@ function App() {
     };
 
     const handleSelectLocation = (latitude: number, longitude: number) => {
-        setModelLocationLatitude(latitude);
-        setModelLocationLongitude(longitude);
+        setModelLatLng(new LatLng(latitude, longitude));
         setModelStage(ModelStage.SelectingDate);
     }
 
     const handleReselectLocation = (latitude: number, longitude: number) => {
-        setModelLocationLatitude(latitude);
-        setModelLocationLongitude(longitude);
+        setModelLatLng(new LatLng(latitude, longitude));
         if (modelStage !== ModelStage.FeaturesError) {
             setModelStage(ModelStage.ReadyForResubmit);
         }
@@ -110,7 +108,7 @@ function App() {
 
     const handleSubmitModel = async (date?: Date, overrides?: (string | null)[]) => {
         console.log(overrides);
-        await getModelPrediction(modelLocationLatitude!, modelLocationLongitude!, modelDate || date!, getOverrideValues(overrides || userOverrides), testingFeatureInput).then((prediction: IPrediction) => {
+        await getModelPrediction(modelLatLng!, modelDate || date!, getOverrideValues(overrides || userOverrides), testingFeatureInput).then((prediction: IPrediction) => {
             console.log(prediction);
             if (prediction.success && hasAllFeatures(prediction.features)) {
                 console.log("Success!");
