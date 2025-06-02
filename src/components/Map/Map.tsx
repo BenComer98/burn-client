@@ -17,6 +17,7 @@ export interface MapProps {
     counties: string[];
     countyRefresh: number;
     modelStage: ModelStage;
+    modelLatLng: null | LatLng;
     handleSelectLocation: (latitude: number, longitude: number) => void;
     handleUpdateLocation: (latitude: number, longitude: number) => void;
 }
@@ -36,13 +37,11 @@ const Map = (props: MapProps) => {
 
     const defaultPosition: LatLngExpression = [36.7783, -119.4179]; // California position
     const [currentPosition, setCurrentPosition] = useState<LatLng>(new LatLng(defaultPosition[0], defaultPosition[1]));
+    const [screenCoords, setScreenCoords] = useState<{x: number, y: number}>({x: 0, y: 0});
     const [mouseScreenPosition, setMouseScreenPosition] = useState<{x: number, y: number}>({x: -1, y: -1});
     const [mouseOnMap, setMouseOnMap] = useState(false);
 
     const isDraggingIconRef = useRef(false);
-
-    // Don't need state here! We don't want to re-render
-    let screenX = 0; let screenY = 0;
 
     // Upon the user finishing selection
     const showFireIcon = [
@@ -54,12 +53,14 @@ const Map = (props: MapProps) => {
         ModelStage.Result,
     ].includes(props.modelStage);
 
-    if (showFireIcon && mapRef.current) {
-        const containerPoint = mapRef.current.latLngToContainerPoint(currentPosition);
-        const mapRect = mapRef.current.getContainer().getBoundingClientRect();
-        screenX = mapRect.left + containerPoint.x;
-        screenY = mapRect.top + containerPoint.y;
-    }
+    useEffect(() => {
+        if (!isDraggingIconRef.current && showFireIcon && mapRef.current && (props.modelLatLng || currentPosition)) {
+            const targetLatLng = props.modelLatLng ?? currentPosition;
+            const containerPoint = mapRef.current.latLngToContainerPoint(targetLatLng);
+            const mapRect = mapRef.current.getContainer().getBoundingClientRect();
+            setScreenCoords({ x: mapRect.left + containerPoint.x, y: mapRect.top + containerPoint.y });
+        }
+    }, [showFireIcon, props.modelLatLng, currentPosition]);
 
     const updateValue1 = useCallback((newValue: number) => {setValue1(newValue); },[] );
     const updateValue2 = useCallback((newValue: number) => {setValue2(newValue); },[] );
@@ -87,10 +88,10 @@ const Map = (props: MapProps) => {
     const handleDocumentMouseMove = (e: globalThis.MouseEvent) => {
         if (!isDraggingIconRef.current || !mapRef.current) return;
         const rect = mapRef.current.getContainer().getBoundingClientRect();
-        const newLatLng = mapRef.current.containerPointToLatLng(
-          L.point(e.clientX - rect.left, e.clientY - rect.top)
-        );
+        const containerPoint = L.point(e.clientX - rect.left, e.clientY - rect.top);
+        const newLatLng = mapRef.current.containerPointToLatLng(containerPoint);
         setCurrentPosition(newLatLng);
+        setScreenCoords({x: e.clientX, y: e.clientY})
       };
       
       const handleDocumentMouseUp = (e: globalThis.MouseEvent) => {
@@ -116,6 +117,7 @@ const Map = (props: MapProps) => {
     const handleIconMouseDown = (e: React.MouseEvent) => {
         if (props.modelStage === ModelStage.MissingFeatures || props.modelStage === ModelStage.FeaturesError || props.modelStage === ModelStage.ReadyForResubmit || props.modelStage === ModelStage.Result) {
           isDraggingIconRef.current = true;
+          setScreenCoords({ x: e.clientX, y: e.clientY });
           if (mapRef.current) {
             mapRef.current.dragging.disable();
       
@@ -214,8 +216,8 @@ const Map = (props: MapProps) => {
                     alt="Fixed Fire Icon"
                     className="fixed-fire-icon"
                     style={{
-                      left: `${screenX}px`,
-                      top: `${screenY}px`
+                      left: `${screenCoords.x}px`,
+                      top: `${screenCoords.y}px`
                     }}
                     onMouseDown={handleIconMouseDown}
                     draggable={false}

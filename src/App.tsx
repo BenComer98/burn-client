@@ -22,6 +22,7 @@ import { hasAllFeatures, getMissingFeatures } from "./components/hooks/hasAllFea
 import MissingFeaturesDialog from "./components/MissingFeaturesDialog";
 import MissingFeature, { InputtedFeature } from "./types/missingFeature";
 import { LatLng } from "leaflet";
+import LatLngEntryBox from "./components/LatLngEntryBox";
 
 const testingFeatureInput: boolean = false;
 
@@ -81,8 +82,10 @@ function App() {
         handleSubmitModel(undefined, newOverrides);
     };
 
-    const handleSelectLocation = (latitude: number, longitude: number) => {
-        setModelLatLng(new LatLng(latitude, longitude));
+    const handleSelectLocation = (latitude?: number, longitude?: number) => {
+        if (latitude !== undefined && longitude !== undefined) {
+            setModelLatLng(new LatLng(latitude, longitude));
+        }
         setModelStage(ModelStage.SelectingDate);
     }
 
@@ -137,7 +140,10 @@ function App() {
 
     const handleChangeDate = (date: Date): void => {
         setModelDate(date);
-        setModelStage(ModelStage.ReadyForResubmit);
+    }
+
+    const handleChangeLatLng = (latitude: number, longitude: number): void => {
+        setModelLatLng(new LatLng(latitude, longitude));
     }
 
     const resetOverrides = () => {
@@ -152,14 +158,15 @@ function App() {
                     <span className="model-container">
                         {modelStage === ModelStage.SelectingLocation && <SelectLocationPromptBox />}
                         {modelStage === ModelStage.Result && <PredictionBox confidence={predictionConfidence!} predicted_reach={predictionAcreage!} />}
-                        {(modelStage === ModelStage.FeaturesError || modelStage === ModelStage.ReadyForResubmit || modelStage === ModelStage.Result) && <FeaturesDisplay features={predictionFeatures} featureOverrides={userOverrides} date={modelDate!} setFeatures={handleSetFeatures} setFeatureOverrides={handleSetOverrides} setDate={handleChangeDate} showErrors={showErrorFields}/>}
+                        {(modelStage === ModelStage.SelectingLocation || modelStage === ModelStage.Result || modelStage === ModelStage.ReadyForResubmit || modelStage === ModelStage.FeaturesError) && <LatLngEntryBox latlng={modelLatLng} setLatLng={handleChangeLatLng} date={modelDate} setDate={handleChangeDate}/>}
+                        {(modelStage === ModelStage.FeaturesError || modelStage === ModelStage.ReadyForResubmit || modelStage === ModelStage.Result) && <FeaturesDisplay features={predictionFeatures} featureOverrides={userOverrides} setFeatures={handleSetFeatures} setFeatureOverrides={handleSetOverrides} showErrors={showErrorFields}/>}
                         <div className="model-buttons">
-                            {modelStage !== ModelStage.SelectingDate && <ModelButton startModel={handleStartModel} resubmitModel={handleResubmitModel} errorFields={showErrorFields} currentStage={modelStage} />}
+                            {modelStage !== ModelStage.SelectingDate && <ModelButton startModel={handleStartModel} resubmitModel={handleResubmitModel} selectLocation={handleSelectLocation} errorFields={showErrorFields} currentStage={modelStage} />}
                             {modelStage !== ModelStage.Standby && <ExitModelButton onExit={handleExitModel}/>}
                         </div>
                     </span>
                     <StatisticsPane statistics={statistics} counties={counties}/>
-                    <Map fireData={fireData} setFireData={setFireData} seed={seed} counties={counties} countyRefresh={countyRefresh} modelStage={modelStage} handleSelectLocation={handleSelectLocation} handleUpdateLocation={handleReselectLocation}/>
+                    <Map fireData={fireData} setFireData={setFireData} seed={seed} counties={counties} countyRefresh={countyRefresh} modelStage={modelStage} modelLatLng={modelLatLng} handleSelectLocation={handleSelectLocation} handleUpdateLocation={handleReselectLocation}/>
                     <Filters setFireData={setFireData} setStatistics={setStatistics} setCountyRefresh={setCountyRefresh}
                       updateBurnWindow={updateBurnWindow} resetBurnWindow={resetBurnWindow} setCounties={setCounties}/>
                     {modelStage === ModelStage.SelectingDate && <DateEntry selectDate={handleSelectDate} /> /* Keeping this one separate for its screen-spanning */}
