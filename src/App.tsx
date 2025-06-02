@@ -169,7 +169,7 @@ function App() {
                     <Map fireData={fireData} setFireData={setFireData} seed={seed} counties={counties} countyRefresh={countyRefresh} modelStage={modelStage} modelLatLng={modelLatLng} handleSelectLocation={handleSelectLocation} handleUpdateLocation={handleReselectLocation}/>
                     <Filters setFireData={setFireData} setStatistics={setStatistics} setCountyRefresh={setCountyRefresh}
                       updateBurnWindow={updateBurnWindow} resetBurnWindow={resetBurnWindow} setCounties={setCounties}/>
-                    {modelStage === ModelStage.SelectingDate && <DateEntry selectDate={handleSelectDate} /> /* Keeping this one separate for its screen-spanning */}
+                    {modelStage === ModelStage.SelectingDate && <DateEntry handleCancel={handleExitModel} selectDate={handleSelectDate} /> /* Keeping this one separate for its screen-spanning */}
                     {modelStage === ModelStage.MissingFeatures && <MissingFeaturesDialog missingFeatures={missingFeatures} handleSubmit={handleSubmitMissingFeatures} handleCancel={handleExitModel}/>}
                 </Route>
                 <Route path="/about">
