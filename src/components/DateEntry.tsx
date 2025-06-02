@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 export interface DateEntryProps {
     selectDate: (date: Date) => void;
+    handleCancel: () => void;
 };
 
 const DateEntry = (props: DateEntryProps) => {
@@ -29,7 +30,11 @@ const DateEntry = (props: DateEntryProps) => {
             onChange={handleChangeDate}
             style={styles.input}
           />
-          <button type="submit" style={styles.button}>Submit</button>
+          <div>
+            <button onClick={props.handleCancel} style={styles.cancel}>Cancel</button>
+            <button type="submit" style={styles.button}>Submit</button>
+          </div>
+          
         </form>
       </div>
     </div>
@@ -70,6 +75,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: 'white',
     cursor: 'pointer',
   },
+  cancel: {
+    padding: '10px 20px',
+    borderRadius: '5px',
+    marginRight: '10px',
+    border: 'none',
+    backgroundColor: '#EEEEEE',
+    color: '#007BFF',
+    cursor: 'pointer',
+  }
 };
 
 export default DateEntry;
