@@ -58,6 +58,8 @@ function App() {
 
     const handleExitModel = () => {
         setModelStage(ModelStage.Standby);
+        setModelLatLng(null);
+        setModelDate(null);
         resetOverrides();
     }
 
@@ -83,6 +85,10 @@ function App() {
     };
 
     const handleSelectLocation = (latitude?: number, longitude?: number) => {
+        if (modelLatLng === null || isNaN(modelLatLng.lat) || isNaN(modelLatLng.lng)) {
+            return; // Require lat and lng to be set
+        }
+
         if (latitude !== undefined && longitude !== undefined) {
             setModelLatLng(new LatLng(latitude, longitude));
         }
