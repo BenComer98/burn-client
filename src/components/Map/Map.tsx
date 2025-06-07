@@ -54,13 +54,30 @@ const Map = (props: MapProps) => {
     ].includes(props.modelStage);
 
     useEffect(() => {
-        if (!isDraggingIconRef.current && showFireIcon && mapRef.current && (props.modelLatLng || currentPosition)) {
-            const targetLatLng = props.modelLatLng ?? currentPosition;
-            const containerPoint = mapRef.current.latLngToContainerPoint(targetLatLng);
-            const mapRect = mapRef.current.getContainer().getBoundingClientRect();
-            setScreenCoords({ x: mapRect.left + containerPoint.x, y: mapRect.top + containerPoint.y });
-        }
-    }, [showFireIcon, props.modelLatLng, currentPosition]);
+    const updateFireIconPosition = () => {
+        if (!mapRef.current || !showFireIcon || isDraggingIconRef.current) return;
+
+        const targetLatLng = props.modelLatLng ?? currentPosition;
+        const containerPoint = mapRef.current.latLngToContainerPoint(targetLatLng);
+        const mapRect = mapRef.current.getContainer().getBoundingClientRect();
+        setScreenCoords({ x: mapRect.left + containerPoint.x, y: mapRect.top + containerPoint.y });
+    };
+
+    if (mapRef.current && showFireIcon) {
+        const map = mapRef.current;
+        map.on('move', updateFireIconPosition);
+        map.on('zoom', updateFireIconPosition);
+        map.on('resize', updateFireIconPosition);
+
+        updateFireIconPosition();
+
+        return () => {
+            map.off('move', updateFireIconPosition);
+            map.off('zoom', updateFireIconPosition);
+            map.off('resize', updateFireIconPosition);
+        };
+    }
+}, [showFireIcon, props.modelLatLng, currentPosition]);
 
     const updateValue1 = useCallback((newValue: number) => {setValue1(newValue); },[] );
     const updateValue2 = useCallback((newValue: number) => {setValue2(newValue); },[] );
