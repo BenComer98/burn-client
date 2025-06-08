@@ -85,13 +85,15 @@ function App() {
     };
 
     const handleSelectLocation = (latitude?: number, longitude?: number) => {
-        if (modelLatLng === null || isNaN(modelLatLng.lat) || isNaN(modelLatLng.lng)) {
-            return; // Require lat and lng to be set
-        }
-
+        console.log(latitude);
+        console.log(longitude);
         if (latitude !== undefined && longitude !== undefined) {
             setModelLatLng(new LatLng(latitude, longitude));
         }
+        else if (modelLatLng === null || isNaN(modelLatLng.lat) || isNaN(modelLatLng.lng)) {
+            return; // Require lat and lng to be set
+        }
+
         setModelStage(ModelStage.SelectingDate);
     }
 
